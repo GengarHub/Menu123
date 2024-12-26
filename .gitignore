@@ -1,41 +1,55 @@
-# Compiled Lua sources
-luac.out
+using System;
+using System.IO;
+using System.Net;
+using System.Diagnostics;
+using System.Windows.Forms;
+using System.Threading.Tasks;
 
-# luarocks build files
-*.src.rock
-*.zip
-*.tar.gz
+class Program
+{
+    static async Task Main()
+    {
+        Console.Title = "Menu Loader";
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("Iniciando o loader...");
 
-# Object files
-*.o
-*.os
-*.ko
-*.obj
-*.elf
+        string menuFile = "SimpleMenu.cs";
+        string menuContent = @"using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using System;
+using System.Collections.Generic;
 
-# Precompiled Headers
-*.gch
-*.pch
+public class SimpleMenu : BaseScript
+{
+    // ... (seu código do menu aqui)
+}";
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-*.def
-*.exp
+        try
+        {
+            // Salva o arquivo do menu
+            File.WriteAllText(menuFile, menuContent);
+            Console.WriteLine("Menu criado com sucesso!");
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+            // Verifica se o FiveM está rodando
+            if (!Process.GetProcessesByName("FiveM").Any())
+            {
+                Console.WriteLine("FiveM não está rodando. Iniciando...");
+                Process.Start("fivem://connect/localhost:30120");
+            }
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
+            Console.WriteLine("\nInstruções:");
+            Console.WriteLine("1. Pressione INSERT para abrir/fechar o menu");
+            Console.WriteLine("2. Use as setas para navegar");
+            Console.WriteLine("3. Pressione ENTER para selecionar");
+            
+            Console.WriteLine("\nPressione qualquer tecla para sair...");
+            Console.ReadKey();
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Erro: {ex.Message}");
+            Console.ReadKey();
+        }
+    }
+}
