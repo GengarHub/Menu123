@@ -1,0 +1,114 @@
+using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using System;
+using System.Collections.Generic;
+
+public class SimpleMenu : BaseScript
+{
+    private bool menuVisible = false;
+    private int currentIndex = 0;
+    private List<string> menuItems = new List<string>
+    {
+        "Curar",
+        "Spawnar Carro",
+        "Teleportar para Waypoint",
+        "Dar Arma"
+    };
+
+    public SimpleMenu()
+    {
+        Tick += OnTick;
+    }
+
+    private async Task OnTick()
+    {
+        if (API.IsControlJustPressed(0, 121)) // 121 é o código da tecla INSERT
+        {
+            menuVisible = !menuVisible;
+        }
+
+        if (menuVisible)
+        {
+            DrawMenu();
+            HandleInput();
+        }
+    }
+
+    private void DrawMenu()
+    {
+        float baseX = 0.8f;
+        float baseY = 0.2f;
+        
+        // Desenha o fundo do menu
+        API.DrawRect(baseX, baseY, 0.2f, 0.4f, 0, 0, 0, 150);
+
+        // Desenha os itens do menu
+        for (int i = 0; i < menuItems.Count; i++)
+        {
+            bool selected = i == currentIndex;
+            API.SetTextScale(0.4f, 0.4f);
+            API.SetTextColour(255, 255, 255, 255);
+            API.SetTextEntry("STRING");
+            API.AddTextComponentString(menuItems[i]);
+            API.DrawText(baseX - 0.09f, baseY - 0.15f + (i * 0.05f));
+
+            if (selected)
+            {
+                API.DrawRect(baseX, baseY - 0.14f + (i * 0.05f), 0.18f, 0.04f, 255, 255, 255, 100);
+            }
+        }
+    }
+
+    private void HandleInput()
+    {
+        if (API.IsControlJustPressed(0, 172)) // Seta para cima
+        {
+            currentIndex = (currentIndex - 1 + menuItems.Count) % menuItems.Count;
+        }
+        else if (API.IsControlJustPressed(0, 173)) // Seta para baixo
+        {
+            currentIndex = (currentIndex + 1) % menuItems.Count;
+        }
+        else if (API.IsControlJustPressed(0, 191)) // Enter
+        {
+            ExecuteMenuItem(currentIndex);
+        }
+    }
+
+    private void ExecuteMenuItem(int index)
+    {
+        switch (index)
+        {
+            case 0: // Curar
+                API.SetEntityHealth(API.PlayerPedId(), 200);
+                break;
+            case 1: // Spawnar Carro
+                SpawnVehicle("adder");
+                break;
+            case 2: // Teleportar para Waypoint
+                TeleportToWaypoint();
+                break;
+            case 3: // Dar Arma
+                API.GiveWeaponToPed(API.PlayerPedId(), API.GetHashKey("WEAPON_PISTOL"), 100, false, true);
+                break;
+        }
+    }
+
+    private async void SpawnVehicle(string vehicleName)
+    {
+        uint vehicleHash = (uint)API.GetHashKey(vehicleName);
+        Vector3 playerPos = API.GetEntityCoords(API.PlayerPedId(), true);
+        int vehicle = API.CreateVehicle(vehicleHash, playerPos.X, playerPos.Y, playerPos.Z, 0f, true, true);
+        API.SetPedIntoVehicle(API.PlayerPedId(), vehicle, -1);
+    }
+
+    private void TeleportToWaypoint()
+    {
+        int waypointBlip = API.GetFirstBlipInfoId(8);
+        if (API.DoesBlipExist(waypointBlip))
+        {
+            Vector3 coords = API.GetBlipInfoIdCoord(waypointBlip);
+            API.SetEntityCoords(API.PlayerPedId(), coords.X, coords.Y, coords.Z, true, false, false, true);
+        }
+    }
+}
